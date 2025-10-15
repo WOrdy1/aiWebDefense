@@ -1,20 +1,18 @@
 {
   "extends": "@react-native/typescript-config/tsconfig.json",
   "compilerOptions": {
-    "strict": true,
-    "noImplicitAny": false,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true,
-    "baseUrl": "./src",
+    "baseUrl": ".",
     "paths": {
-      "@api/*": ["api/*"],
-      "@components/*": ["components/*"],
-      "@screens/*": ["screens/*"],
-      "@store/*": ["store/*"],
-      "@utils/*": ["utils/*"]
+      "@/*": ["src/*"],
+      "@api/*": ["src/api/*"],
+      "@components/*": ["src/components/*"],
+      "@hooks/*": ["src/hooks/*"],
+      "@navigation/*": ["src/navigation/*"],
+      "@screens/*": ["src/screens/*"],
+      "@store/*": ["src/store/*"],
+      "@types/*": ["src/types/*"],
+      "@utils/*": ["src/utils/*"]
     }
   },
-  "include": ["src", "App.tsx", "__tests__"],
-  "exclude": ["node_modules"]
+  "include": ["src", "App.tsx", "__tests__"]
 }
