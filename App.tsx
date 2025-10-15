@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import type { PropsWithChildren } from 'react';
 import {
   SafeAreaView,
@@ -16,7 +16,12 @@ import {
   LearnMoreLinks,
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
-import Config from 'react-native-config'; // 👈 добавлено
+import Config from 'react-native-config';
+
+// 👇 Импорт тестов API
+import { apiGet } from './src/api/http'; // твоя универсальная функция
+// (по желанию) import { testRetry } from './src/api/testRetry';
+// (по желанию) import { testCancel } from './src/api/testCancel';
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -56,7 +61,34 @@ function App(): React.JSX.Element {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
-  console.log('🧩 ENV TEST:', Config.API_BASE_URL); // 👈 вывод в консоль
+  // 🧠 Тест API-клиента при старте
+  useEffect(() => {
+    const testApi = async () => {
+      console.log('🚀 Testing API Client...');
+      try {
+        // --- 1️⃣ Тест Retry ---
+        await apiGet('/invalid-endpoint'); // вызовет NetworkError + Retry
+        // --- 2️⃣ Пример запроса к dev-серверу ---
+        // const data = await apiGet('/users/me');
+        // console.log('✅ API Response:', data);
+      } catch (error: any) {
+        console.log('❌ API Error:', error.name, error.message);
+      }
+
+      // --- 3️⃣ Пример отмены запроса ---
+      // const controller = new AbortController();
+      // setTimeout(() => controller.abort(), 500);
+      // try {
+      //   await apiGet('/delay/5', {}, { signal: controller.signal });
+      // } catch (err: any) {
+      //   console.log('🚫 Canceled:', err.name, err.message);
+      // }
+    };
+
+    testApi();
+  }, []);
+
+  console.log('🧩 ENV TEST:', Config.API_BASE_URL);
 
   return (
     <SafeAreaView style={backgroundStyle}>
@@ -66,17 +98,8 @@ function App(): React.JSX.Element {
       />
       <ScrollView contentInsetAdjustmentBehavior="automatic" style={backgroundStyle}>
         <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}
-        >
-          {/* 👇 Визуальное отображение ENV */}
-          <View
-            style={{
-              padding: 20,
-            }}
-          >
+        <View style={{ backgroundColor: isDarkMode ? Colors.black : Colors.white }}>
+          <View style={{ padding: 20 }}>
             <Text
               style={{
                 color: isDarkMode ? Colors.white : Colors.black,
@@ -84,7 +107,7 @@ function App(): React.JSX.Element {
                 fontWeight: '600',
               }}
             >
-              API_BASE_URL: {Config.API_BASE_URL ?? '❌ not set'}
+              🌍 API_BASE_URL: {Config.API_BASE_URL ?? '❌ not set'}
             </Text>
           </View>
 
