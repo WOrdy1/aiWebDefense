@@ -1,43 +1,24 @@
-import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 let accessToken: string | null = null;
 
 const AUTH_TOKEN_KEY = 'AUTH_ACCESS_TOKEN';
 
-function setAuthToken(token: string) {
-  if (token === null || token.trim() === '') {
-    throw new Error('Auth token cannot be empty or null');
-  }
-  accessToken = token;
-}
-
-function getAuthToken() {
-  return accessToken;
-}
-async function clearAuthToken() {
-  accessToken = null;
-  await SecureStore.deleteItemAsync(AUTH_TOKEN_KEY);
-}
-
+// ✅ Сохранить токен
 async function saveAuthToken(token: string): Promise<void> {
-  if (token === null || token.trim() === '') {
+  if (!token || token.trim() === '') {
     throw new Error('Auth token cannot be empty or null');
   }
-  await SecureStore.setItemAsync(AUTH_TOKEN_KEY, token);
   accessToken = token;
+  await AsyncStorage.setItem(AUTH_TOKEN_KEY, token);
 }
 
+// ✅ Загрузить токен
 async function loadAuthToken(): Promise<string | null> {
   try {
-    const token = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
-    if (token) {
-      accessToken = token;
-      return token;
-    } else {
-      accessToken = null;
-      return null;
-    }
+    const token = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
+    accessToken = token;
+    return token;
   } catch (error) {
     console.warn('Failed to load auth token:', error);
     accessToken = null;
@@ -45,4 +26,15 @@ async function loadAuthToken(): Promise<string | null> {
   }
 }
 
-export { saveAuthToken, getAuthToken, clearAuthToken, loadAuthToken };
+// ✅ Получить токен из памяти
+function getAuthToken(): string | null {
+  return accessToken;
+}
+
+// ✅ Очистить токен
+async function clearAuthToken(): Promise<void> {
+  accessToken = null;
+  await AsyncStorage.removeItem(AUTH_TOKEN_KEY);
+}
+
+export { saveAuthToken, getAuthToken, loadAuthToken, clearAuthToken };

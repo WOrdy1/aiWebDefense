@@ -1,150 +1,120 @@
-import React, { useEffect } from 'react';
-import type { PropsWithChildren } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   SafeAreaView,
-  ScrollView,
   StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
+  ActivityIndicator,
   View,
+  Text,
+  Animated,
+  StyleSheet,
+  TouchableOpacity,
 } from 'react-native';
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+import { Colors } from 'react-native/Libraries/NewAppScreen';
+import { useAuthStore } from './src/store/authStore';
+import LoginScreen from './src/screens/LoginScreen';
 import Config from 'react-native-config';
 
-// 👇 Импорт тестов API
-import { apiGet } from './src/api/http'; // твоя универсальная функция
-// (по желанию) import { testRetry } from './src/api/testRetry';
-// (по желанию) import { testCancel } from './src/api/testCancel';
-
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
-function Section({ children, title }: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}
-      >
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}
-      >
-        {children}
-      </Text>
-    </View>
-  );
-}
-
 function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
+  const isDarkMode = false;
+  const backgroundStyle = { backgroundColor: isDarkMode ? Colors.darker : Colors.lighter };
 
-  // 🧠 Тест API-клиента при старте
+  // Zustand store
+  const { hydrateAuth, isAuthenticated, loading, user, signOut } = useAuthStore();
+
+  // 🎬 Анимация появления контента
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  // Восстанавливаем токен при запуске
   useEffect(() => {
-    const testApi = async () => {
-      console.log('🚀 Testing API Client...');
-      try {
-        // --- 1️⃣ Тест Retry ---
-        await apiGet('/invalid-endpoint'); // вызовет NetworkError + Retry
-        // --- 2️⃣ Пример запроса к dev-серверу ---
-        // const data = await apiGet('/users/me');
-        // console.log('✅ API Response:', data);
-      } catch (error: any) {
-        console.log('❌ API Error:', error.name, error.message);
-      }
-
-      // --- 3️⃣ Пример отмены запроса ---
-      // const controller = new AbortController();
-      // setTimeout(() => controller.abort(), 500);
-      // try {
-      //   await apiGet('/delay/5', {}, { signal: controller.signal });
-      // } catch (err: any) {
-      //   console.log('🚫 Canceled:', err.name, err.message);
-      // }
-    };
-
-    testApi();
+    hydrateAuth();
   }, []);
 
+  // При изменении auth-состояния плавно показываем экран
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 600,
+      useNativeDriver: true,
+    }).start();
+  }, [isAuthenticated, loading]);
+
   console.log('🧩 ENV TEST:', Config.API_BASE_URL);
+  console.log('👤 Auth state:', { isAuthenticated, loading, user });
 
+  // 🔄 Пока идёт загрузка
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.center, backgroundStyle]}>
+        <ActivityIndicator size="large" color="#007AFF" />
+        <Text style={styles.loadingText}>Загрузка...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  // ⚙️ Основной контент: если вошёл → домашний экран
+  const ScreenContent = isAuthenticated ? (
+    <View style={styles.center}>
+      <Text style={styles.title}>👋 Привет, {user?.name || 'пользователь'}!</Text>
+      <Text style={styles.subtitle}>Вы успешно вошли в систему.</Text>
+
+      {/* 🔘 Кнопка выхода */}
+      <TouchableOpacity style={styles.logoutButton} onPress={signOut}>
+        <Text style={styles.logoutText}>Выйти</Text>
+      </TouchableOpacity>
+    </View>
+  ) : (
+    <LoginScreen />
+  );
+
+  // 💫 Оборачиваем всё в fade-анимацию
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView contentInsetAdjustmentBehavior="automatic" style={backgroundStyle}>
-        <Header />
-        <View style={{ backgroundColor: isDarkMode ? Colors.black : Colors.white }}>
-          <View style={{ padding: 20 }}>
-            <Text
-              style={{
-                color: isDarkMode ? Colors.white : Colors.black,
-                fontSize: 16,
-                fontWeight: '600',
-              }}
-            >
-              🌍 API_BASE_URL: {Config.API_BASE_URL ?? '❌ not set'}
-            </Text>
-          </View>
-
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this screen and then come
-            back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">Read the docs to discover what to do next:</Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
+    <SafeAreaView style={[styles.container, backgroundStyle]}>
+      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+      <Animated.View style={[styles.animatedContainer, { opacity: fadeAnim }]}>
+        {ScreenContent}
+      </Animated.View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  container: {
+    flex: 1,
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+  animatedContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  highlight: {
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+  },
+  title: {
+    fontSize: 22,
     fontWeight: '700',
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 30,
+  },
+  logoutButton: {
+    backgroundColor: '#FF3B30',
+    paddingVertical: 10,
+    paddingHorizontal: 25,
+    borderRadius: 8,
+  },
+  logoutText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

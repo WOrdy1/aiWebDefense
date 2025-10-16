@@ -110,3 +110,17 @@ apiClient.interceptors.response.use(
 );
 
 console.log('✅ API Client Config:', { BASE_URL, TIMEOUT_MS });
+
+// ==============================
+// TYPE FIX: Make apiClient return pure data (not AxiosResponse)
+// ==============================
+import type { AxiosInstance } from 'axios';
+
+declare module 'axios' {
+  export interface AxiosInstance {
+    get<T = any, R = T>(url: string, config?: any): Promise<R>;
+    post<T = any, R = T>(url: string, data?: any, config?: any): Promise<R>;
+    put<T = any, R = T>(url: string, data?: any, config?: any): Promise<R>;
+    delete<T = any, R = T>(url: string, config?: any): Promise<R>;
+  }
+}
