@@ -1,4 +1,4 @@
-import { ApiError, NetworkError, TimeoutError } from './errors';
+import { ApiError, NetworkError, TimeoutError } from '../errors';
 
 const apiErr = new ApiError('Token expired', 401, 'AUTH_INVALID_TOKEN');
 const netErr = new NetworkError('No internet');

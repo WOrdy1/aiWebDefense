@@ -1,4 +1,4 @@
-import { apiGet } from './http';
+import { apiGet } from '../http';
 
 export async function testRetry() {
   try {

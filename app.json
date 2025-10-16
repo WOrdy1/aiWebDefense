@@ -1,4 +1,7 @@
 {
   "name": "aiWebDefense",
-  "displayName": "aiWebDefense"
+  "displayName": "aiWebDefense",
+  "plugins": [
+    "expo-secure-store"
+  ]
 }
