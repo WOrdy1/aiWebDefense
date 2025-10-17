@@ -1,19 +1,24 @@
 import React, { useState } from 'react';
 import {
+  SafeAreaView,
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  useColorScheme,
+  StatusBar,
 } from 'react-native';
 import { useAuthStore } from '../store/authStore';
+import AnimatedBackground from '../components/AnimatedBackground';
 
 export default function LoginScreen() {
   const { signIn, loading, error, isAuthenticated, user } = useAuthStore();
   const [email, setEmail] = useState('test@example.com');
   const [password, setPassword] = useState('123456');
   const [message, setMessage] = useState('');
+  const isDarkMode = useColorScheme() === 'dark';
 
   const handleLogin = async () => {
     setMessage('');
@@ -26,48 +31,101 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>🔐 Вход в систему</Text>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: '#000' }]} edges={['top', 'bottom']}>
+      <StatusBar translucent barStyle="light-content" backgroundColor="transparent" />
+      <View style={styles.wrapper}>
+        <AnimatedBackground />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-      />
+        <View
+          style={[
+            styles.formWrapper,
+            {
+              backgroundColor: isDarkMode ? 'rgba(25, 25, 25, 0.85)' : 'rgba(255, 255, 255, 0.9)',
+            },
+          ]}
+        >
+          <Text style={[styles.title, { color: isDarkMode ? '#fff' : '#2a0dd2ff' }]}>
+            🔐 Вход в систему
+          </Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Пароль"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+          <TextInput
+            style={[
+              styles.input,
+              {
+                backgroundColor: isDarkMode ? '#1a1a1a' : '#fff',
+                color: isDarkMode ? '#fff' : '#000',
+                borderColor: isDarkMode ? '#333' : '#ddd',
+              },
+            ]}
+            placeholder="Email"
+            placeholderTextColor={isDarkMode ? '#aaa' : '#555'}
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+          />
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Войти</Text>
-        )}
-      </TouchableOpacity>
+          <TextInput
+            style={[
+              styles.input,
+              {
+                backgroundColor: isDarkMode ? '#1a1a1a' : '#fff',
+                color: isDarkMode ? '#fff' : '#000',
+                borderColor: isDarkMode ? '#333' : '#ddd',
+              },
+            ]}
+            placeholder="Пароль"
+            placeholderTextColor={isDarkMode ? '#aaa' : '#555'}
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
 
-      {error && <Text style={styles.error}>⚠️ {error}</Text>}
-      {message !== '' && <Text style={styles.message}>{message}</Text>}
-      {isAuthenticated && <Text style={styles.success}>👤 Вы вошли как: {user?.name}</Text>}
-    </View>
+          <TouchableOpacity
+            style={[styles.button, loading && { opacity: 0.7 }]}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Войти</Text>
+            )}
+          </TouchableOpacity>
+
+          {error && <Text style={styles.error}>⚠️ {error}</Text>}
+          {message !== '' && (
+            <Text style={[styles.message, { color: isDarkMode ? '#ccc' : '#333' }]}>{message}</Text>
+          )}
+          {isAuthenticated && <Text style={styles.success}>👤 Вы вошли как: {user?.name}</Text>}
+        </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
+    backgroundColor: '#000',
+  },
+  wrapper: {
+    flex: 1,
+    backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  formWrapper: {
+    width: '85%',
+    borderRadius: 16,
+    paddingVertical: 30,
     paddingHorizontal: 20,
-    backgroundColor: '#f4f4f4',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 5,
+    zIndex: 2,
   },
   title: {
     fontSize: 24,
@@ -76,9 +134,7 @@ const styles = StyleSheet.create({
   },
   input: {
     width: '100%',
-    backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 10,
     padding: 12,
     marginBottom: 15,
@@ -102,7 +158,6 @@ const styles = StyleSheet.create({
   },
   message: {
     marginTop: 10,
-    color: '#333',
   },
   success: {
     marginTop: 15,
